@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -14,15 +16,15 @@ type MiscController struct{}
 
 func (m *MiscController) Ping(c *gin.Context) {
 	website := c.PostForm("website")
-
-	var userInput string
+	if !isWebsiteValid(website) {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{"message": "Ошибка"})
+		return
+	}
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		userInput = "ping -n 4 " + website
-		cmd = exec.Command("cmd", "/C", userInput)
+		cmd = exec.Command("ping", "-n", "4", website)
 	} else {
-		userInput = "ping -c 4 " + website
-		cmd = exec.Command("sh", "-c", userInput)
+		cmd = exec.Command("ping", "-c", "4", website)
 	}
 	output, err := cmd.CombinedOutput()
 
@@ -36,6 +38,11 @@ func (m *MiscController) Ping(c *gin.Context) {
 	c.HTML(200, "ping.html", gin.H{
 		"Result": result,
 	})
+}
+
+func isWebsiteValid(website string) bool {
+	domainRegex := regexp.MustCompile(`^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$`)
+	return domainRegex.MatchString(website) || net.ParseIP(website) != nil
 }
 
 func (m *MiscController) Files(c *gin.Context) {
