@@ -27,7 +27,7 @@ func (a *AuthController) Login(c *gin.Context) {
 
 	var storedUsername, storedPassword string
 
-	err := db.GetDB().QueryRow("SELECT username, password FROM users WHERE username = '"+username+"'").Scan(&storedUsername, &storedPassword)
+	err := db.GetDB().QueryRow("SELECT username, password FROM users WHERE username = ?", username).Scan(&storedUsername, &storedPassword)
 	if err != nil {
 		fmt.Println(err)
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"message": "Неправильное имя пользователя или пароль"})
