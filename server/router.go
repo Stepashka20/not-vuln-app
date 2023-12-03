@@ -2,6 +2,7 @@ package server
 
 import (
 	"NotVulnApp/controllers"
+	"NotVulnApp/middleware"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 
 func NewRouter() *gin.Engine {
 	router := gin.Default()
+	mw := middleware.GetMW()
 
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
 	router.Use(sessions.Sessions("mysession", store))
@@ -18,8 +20,8 @@ func NewRouter() *gin.Engine {
 	router.LoadHTMLGlob("./templates/*.html")
 
 	auth := new(controllers.AuthController)
-	router.POST("/login", auth.Login)
-	router.POST("/register", auth.Register)
+	router.POST("/login", mw, auth.Login)
+	router.POST("/register", mw, auth.Register)
 	router.GET("/logout", auth.Logout)
 	router.GET("/", auth.Index)
 
