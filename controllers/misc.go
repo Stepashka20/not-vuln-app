@@ -3,8 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type MiscController struct{}
@@ -41,5 +44,36 @@ func (m *MiscController) Files(c *gin.Context) {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"message": "Ошибка"})
 		return
 	}
-	c.File("./uploads/" + filename)
+
+	basePath := "./uploads/"
+	cleanedPath := CleanPath(filepath.Join(basePath, filename))
+
+	if !isFileWithinDirectory(cleanedPath, basePath) {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{"message": "Ошибка"})
+		return
+	}
+
+	c.File(cleanedPath)
+}
+
+func isFileWithinDirectory(filePath, basePath string) bool {
+	relPath, err := filepath.Rel(basePath, filePath)
+	if err != nil {
+		return false
+	}
+	return !strings.HasPrefix(relPath, ".."+string(filepath.Separator))
+}
+
+func CleanPath(path string) string {
+	if path == "" {
+		return ""
+	}
+	path = filepath.Clean(path)
+
+	if !filepath.IsAbs(path) {
+		path = filepath.Clean(string(os.PathSeparator) + path)
+		path, _ = filepath.Rel(string(os.PathSeparator), path)
+	}
+
+	return filepath.Clean(path)
 }
