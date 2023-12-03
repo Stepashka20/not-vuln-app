@@ -34,12 +34,21 @@ func (u *UserController) Profile(c *gin.Context) {
 
 func (u *UserController) Delete(c *gin.Context) {
 	username := c.Query("user")
+
+	session := sessions.Default(c)
+	cookieUsername := session.Get("username")
+
+	if cookieUsername != username || cookieUsername == nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{"message": "Ошибка"})
+		return
+	}
+
 	_, err := db.GetDB().Exec("DELETE FROM users WHERE username = ?", username)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"message": "Ошибка базы данных"})
 		return
 	}
-	session := sessions.Default(c)
+
 	session.Clear()
 	session.Save()
 	c.Redirect(http.StatusFound, "/")
