@@ -28,7 +28,8 @@ func (u *UserController) Profile(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "profile.html", gin.H{"username": template.HTML(username.(string)), "filename": favoriteFilename})
+	escapedUsername := template.HTMLEscapeString(username.(string))
+	c.HTML(http.StatusOK, "profile.html", gin.H{"username": template.HTML(escapedUsername), "filename": favoriteFilename})
 }
 
 func (u *UserController) Delete(c *gin.Context) {
